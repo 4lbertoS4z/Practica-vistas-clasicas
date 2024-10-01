@@ -20,6 +20,10 @@ class CharactersViewModel(private val charactersUseCase: GetCharactersUseCase,
 
     private val characterMutableLiveData = MutableLiveData<CharacterListState>()
     private val characterDetailMutableLiveData = MutableLiveData<CharacterDetailState>()
+    private var characters: MutableList<Character> = mutableListOf()
+    private var currentPage = 1
+    private var isLoading = false
+    private var isLastPage = false
 
     fun getCharacterLiveData(): LiveData<CharacterListState> {
         return characterMutableLiveData
@@ -29,20 +33,26 @@ class CharactersViewModel(private val charactersUseCase: GetCharactersUseCase,
         return characterDetailMutableLiveData
     }
 
-    fun fetchCharacters() {
+    fun fetchCharacters(page: Int) {
+        if (isLoading) return // Evita múltiples llamadas
+        isLoading = true
         characterMutableLiveData.value = ResourceState.Loading()
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val data = charactersUseCase.execute()
+                val data = charactersUseCase.execute(page)
+                characters.addAll(data)
 
                 withContext(Dispatchers.Main) {
-                    characterMutableLiveData.value =ResourceState.Success(data)
+                    characterMutableLiveData.value = ResourceState.Success(characters)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     characterMutableLiveData.value = ResourceState.Error(e.localizedMessage.orEmpty())
                 }
+            }
+            finally {
+                isLoading = false // Resetea la bandera de carga
             }
         }
     }

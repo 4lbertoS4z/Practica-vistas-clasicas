@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.rickmorticlassicview.databinding.RowCharacterItemBinding
@@ -39,8 +40,10 @@ class CharacterListAdapter : RecyclerView.Adapter<CharacterListAdapter.Character
     }
 
     @SuppressLint("NotifyDataSetChanged")
-    fun submitList(list: List<com.example.rickmorticlassicview.model.Character>) {
+    fun submitList(list: List<Character>) {
+        val diffResult = DiffUtil.calculateDiff(CharacterDiffCallback(characterList, list))
         characterList = list
+        diffResult.dispatchUpdatesTo(this)
         notifyDataSetChanged()
     }
 
@@ -48,5 +51,22 @@ class CharacterListAdapter : RecyclerView.Adapter<CharacterListAdapter.Character
         val rootView = binding.root
         val nameTextView = binding.tvCharacterItemName
         val characterImageView = binding.ivCharacterItem
+    }
+}
+
+class CharacterDiffCallback(
+    private val oldList: List<Character>,
+    private val newList: List<Character>
+) : DiffUtil.Callback() {
+    override fun getOldListSize(): Int = oldList.size
+
+    override fun getNewListSize(): Int = newList.size
+
+    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        return oldList[oldItemPosition].id == newList[newItemPosition].id
+    }
+
+    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
+        return oldList[oldItemPosition] == newList[newItemPosition]
     }
 }

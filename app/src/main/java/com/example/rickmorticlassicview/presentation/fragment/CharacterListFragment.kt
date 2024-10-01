@@ -5,8 +5,12 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.content.ContentProviderCompat
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.rickmorticlassicview.R
 import com.example.rickmorticlassicview.presentation.adapter.CharacterListAdapter
 import com.example.rickmorticlassicview.databinding.FragmentCharacterListBinding
@@ -14,6 +18,7 @@ import com.example.rickmorticlassicview.model.ResourceState
 import com.example.rickmorticlassicview.presentation.viewmodel.CharactersViewModel
 import com.example.rickmorticlassicview.presentation.viewmodel.CharacterListState
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 
@@ -25,7 +30,7 @@ class CharacterListFragment : Fragment() {
 
     private val characterListAdapter = CharacterListAdapter()
 
-    private val characterViewModel : CharactersViewModel by activityViewModel()
+    private val characterViewModel: CharactersViewModel by activityViewModel()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -34,13 +39,39 @@ class CharacterListFragment : Fragment() {
         return binding.root
     }
 
+    private var currentPage = 1
+    private var isLoading = false
+    private var isLastPage = false
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         initViewModel()
         initUI()
 
-        characterViewModel.fetchCharacters()
+        // Carga inicial de personajes
+        characterViewModel.fetchCharacters(currentPage)
+
+        // Listener para el scroll
+        binding.rvCharacterList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                if (!isLoading && !isLastPage && !binding.rvCharacterList.canScrollVertically(1)) {
+                    isLoading = true
+                    currentPage++
+                    characterViewModel.fetchCharacters(currentPage)
+                }
+                binding.btnScrollToTop.visibility = if (recyclerView.canScrollVertically(-1)) {
+                    View.VISIBLE
+                } else {
+                    View.GONE
+                }
+            }
+        })
+        // Click del botón para desplazarse al inicio
+        binding.btnScrollToTop.setOnClickListener {
+            binding.rvCharacterList.smoothScrollToPosition(0)
+        }
     }
 
     private fun initViewModel() {
@@ -58,12 +89,25 @@ class CharacterListFragment : Fragment() {
 
             is ResourceState.Success -> {
                 binding.pbCharacterList.visibility = View.GONE
-                characterListAdapter.submitList(state.result)
+                if (state.result.isEmpty()) {
+                    isLastPage = true
+                    // Si la lista de resultados está vacía y es la última página, muestra un mensaje
+                    Snackbar.make(
+                        binding.rvCharacterList,
+                        "No hay más personajes para cargar.",
+                        Snackbar.LENGTH_SHORT
+                    ).show()
+                } else {
+                    characterListAdapter.submitList(state.result)
+                    isLastPage = false
+                }
+                isLoading = false // Resetea la bandera de carga
             }
 
             is ResourceState.Error -> {
                 binding.pbCharacterList.visibility = View.GONE
                 showErrorDialog(state.error)
+                isLoading = false // Resetea la bandera de carga
             }
         }
     }
@@ -87,7 +131,7 @@ class CharacterListFragment : Fragment() {
             .setMessage(error)
             .setPositiveButton(R.string.ok_action, null)
             .setNegativeButton(R.string.retry_action) { dialog, witch ->
-                characterViewModel.fetchCharacters()
+                characterViewModel.fetchCharacters(currentPage)
             }
             .show()
     }

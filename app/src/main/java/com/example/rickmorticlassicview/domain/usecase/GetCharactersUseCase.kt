@@ -5,8 +5,7 @@ import com.example.rickmorticlassicview.model.Character
 
 class GetCharactersUseCase(private val charactersRepository: CharactersRepository) {
 
-    suspend fun execute(): List<Character>{
-        return charactersRepository.getCharacters()
+    suspend fun execute(page: Int): List<Character> {
+        return charactersRepository.getCharacters(page)
     }
-
 }

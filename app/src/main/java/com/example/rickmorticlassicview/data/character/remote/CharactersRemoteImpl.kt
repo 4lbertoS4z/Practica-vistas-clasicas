@@ -6,7 +6,7 @@ import com.example.rickmorticlassicview.model.Character
 class CharactersRemoteImpl (private val rickAndMortyService: RickAndMortyService) {
 
     suspend fun getCharacters(): List<Character>{
-        return rickAndMortyService.getCharacters().characters
+        return rickAndMortyService.getCharacters(page=1).characters
     }
 
     suspend fun getCharacter( characterId: Int): Character{

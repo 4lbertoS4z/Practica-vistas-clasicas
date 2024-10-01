@@ -4,7 +4,8 @@ import androidx.annotation.Keep
 import com.google.gson.annotations.SerializedName
 
 data class CharactersResponse(
-    @SerializedName("results") val characters: List<Character>
+    @SerializedName("results") val characters: List<Character>,
+    @SerializedName("info") val pageInfo: PageInfo
 )
 
 @Keep
@@ -48,3 +49,11 @@ enum class Status {
     Dead,
     Unknown
 }
+
+@Keep
+data class PageInfo(
+    val count: Int,
+    val pages: Int,
+    val next: String?,
+    val prev: String?
+)
