@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">RickMorti ClassicView</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="error_message">Error</string>
+    <string name="ok_action">aceptar</string>
+    <string name="retry_action">reintentar</string>
+</resources>
