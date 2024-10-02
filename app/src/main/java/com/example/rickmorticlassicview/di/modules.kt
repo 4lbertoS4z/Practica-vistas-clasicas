@@ -5,7 +5,6 @@ import com.example.rickmorticlassicview.data.character.remote.CharactersRemoteIm
 import com.example.rickmorticlassicview.data.remote.ApiClient
 import com.example.rickmorticlassicview.data.remote.RickAndMortyService
 import com.example.rickmorticlassicview.domain.CharactersRepository
-import com.example.rickmorticlassicview.domain.usecase.GetCharactersDetailUseCase
 import com.example.rickmorticlassicview.domain.usecase.GetCharactersUseCase
 import com.example.rickmorticlassicview.presentation.viewmodel.CharactersViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -19,6 +18,5 @@ val charactersModule = module {
     factory { CharactersRemoteImpl(get()) }
     factory<CharactersRepository> { CharactersDataImpl(get()) }
     factory { GetCharactersUseCase(get()) }
-    factory { GetCharactersDetailUseCase(get()) }
-    viewModel { CharactersViewModel(get(),get(),get()) }
+    viewModel { CharactersViewModel(get(),get()) }
 }

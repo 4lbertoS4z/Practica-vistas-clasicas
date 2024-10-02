@@ -23,15 +23,7 @@ class CharacterListFragment : Fragment() {
     private lateinit var binding: FragmentCharacterListBinding
     private val characterViewModel: CharactersViewModel by activityViewModel()
     private val pagingAdapter: CharacterListAdapter by lazy {
-        CharacterListAdapter { character ->
-            val currentPage = (pagingAdapter.itemCount + 41) / 42
-            characterViewModel.setCurrentPage(currentPage)
-            findNavController().navigate(
-                CharacterListFragmentDirections.actionCharacterListFragmentToCharacterDetailFragment(
-                    character.id.toInt()
-                )
-            )
-        }
+        CharacterListAdapter()
     }
 
     override fun onCreateView(

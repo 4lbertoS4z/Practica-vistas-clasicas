@@ -14,7 +14,7 @@ import com.example.rickmorticlassicview.model.Character
 
 
 class CharacterListAdapter(
-    private val onClickListener: (Character) -> Unit
+
 ) : PagingDataAdapter<Character, CharacterListAdapter.CharacterViewHolder>(CharacterDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CharacterViewHolder {
@@ -25,21 +25,17 @@ class CharacterListAdapter(
     override fun onBindViewHolder(holder: CharacterViewHolder, position: Int) {
         val character = getItem(position)
         character?.let {
-            holder.bind(it, onClickListener)
+            holder.bind(it)
         }
     }
 
     inner class CharacterViewHolder(private val binding: RowCharacterItemBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(character: Character, onClickListener: (Character) -> Unit) {
+        fun bind(character: Character) {
             binding.tvCharacterItemName.text = character.name
             Glide.with(binding.ivCharacterItem.context)
                 .load(character.image)
                 .into(binding.ivCharacterItem)
 
-            // Configura el click listener
-            binding.root.setOnClickListener {
-                onClickListener(character)
-            }
         }
     }
 }

@@ -10,21 +10,14 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.example.rickmorticlassicview.data.remote.CharacterPagingSource
-import com.example.rickmorticlassicview.domain.usecase.GetCharactersDetailUseCase
 import com.example.rickmorticlassicview.domain.usecase.GetCharactersUseCase
 import com.example.rickmorticlassicview.model.Character
-import com.example.rickmorticlassicview.model.ResourceState
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
-// typealias CharacterListState = ResourceState<List<Character>>
-typealias CharacterDetailState = ResourceState<Character>
+
 
 class CharactersViewModel(
     private val charactersUseCase: GetCharactersUseCase,
-    private val characterDetailUseCase: GetCharactersDetailUseCase,
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -41,29 +34,7 @@ class CharactersViewModel(
         savedStateHandle[currentPageKey] = page
     }
 
-    // LiveData para manejar los detalles de un personaje específico
-    private val characterDetailMutableLiveData = MutableLiveData<CharacterDetailState>()
 
-    fun getCharacterDetailLiveData(): LiveData<CharacterDetailState> {
-        return characterDetailMutableLiveData
-    }
 
-    // Método para obtener los detalles de un personaje específico
-    fun fetchCharacter(characterId: Int) {
-        characterDetailMutableLiveData.value = ResourceState.Loading()
 
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val data = characterDetailUseCase.execute(characterId)
-
-                withContext(Dispatchers.Main) {
-                    characterDetailMutableLiveData.value = ResourceState.Success(data)
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    characterDetailMutableLiveData.value = ResourceState.Error(e.localizedMessage.orEmpty())
-                }
-            }
-        }
-    }
 }

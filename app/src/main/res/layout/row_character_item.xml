@@ -4,28 +4,36 @@
     android:layout_height="wrap_content"
     android:background="?selectableItemBackground"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="horizontal"
-    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
     android:paddingStart="16dp"
     android:paddingEnd="16dp"
     android:paddingTop="8dp"
     android:paddingBottom="8dp">
 
-    <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/iv_character_item"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:background="@color/black"
-        />
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_character_item_name"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
         android:textSize="19sp"
         android:textStyle="bold"
+        android:layout_gravity="center_horizontal"
         android:maxLines="3"
         android:ellipsize="end"
+        android:paddingBottom="8dp"
         tools:text="Albert Einstein"/>
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/iv_character_item"
+        android:layout_width="180dp"
+        android:layout_height="180dp"
+        android:scaleType="centerCrop"
+        android:layout_gravity="center_horizontal"
+        android:background="@color/black"
+        android:padding="4dp"
+        android:backgroundTint="@color/black"
+        android:layout_marginBottom="8dp"
+        android:clipToOutline="true" />
+
 
 </androidx.appcompat.widget.LinearLayoutCompat>

@@ -12,13 +12,13 @@ class CharacterPagingSource(
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Character> {
         return try {
-            val page = params.key ?: initialPage // Usa la página inicial
-            val characters = repository.execute(page)
+            val page = params.key ?: initialPage
+            val response = repository.execute(page)
 
             LoadResult.Page(
-                data = characters,
+                data = response.characters,  // Lista de personajes
                 prevKey = if (page == 1) null else page - 1,
-                nextKey = if (characters.isEmpty()) null else page + 1
+                nextKey = if (response.pageInfo.next == null) null else page + 1
             )
         } catch (e: Exception) {
             LoadResult.Error(e)
