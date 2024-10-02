@@ -21,6 +21,7 @@
         android:maxLines="3"
         android:ellipsize="end"
         android:paddingBottom="8dp"
+        android:textColor="#FFD600"
         tools:text="Albert Einstein"/>
 
     <androidx.appcompat.widget.AppCompatImageView
