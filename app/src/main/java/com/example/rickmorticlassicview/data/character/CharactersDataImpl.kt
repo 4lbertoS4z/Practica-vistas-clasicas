@@ -1,10 +1,8 @@
 package com.example.rickmorticlassicview.data.character
 
-import com.example.rickmorticlassicview.data.character.remote.CharactersRemoteImpl
 import com.example.rickmorticlassicview.data.remote.RickAndMortyService
 import com.example.rickmorticlassicview.domain.CharactersRepository
 import com.example.rickmorticlassicview.model.Character
-import com.example.rickmorticlassicview.model.CharactersResponse
 
 
 class CharactersDataImpl(private val charactersRemoteImpl: RickAndMortyService): CharactersRepository {

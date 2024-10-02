@@ -20,5 +20,5 @@ val charactersModule = module {
     factory<CharactersRepository> { CharactersDataImpl(get()) }
     factory { GetCharactersUseCase(get()) }
     factory { GetCharactersDetailUseCase(get()) }
-    viewModel { CharactersViewModel(get(),get()) }
+    viewModel { CharactersViewModel(get(),get(),get()) }
 }

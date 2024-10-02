@@ -1,72 +1,55 @@
 package com.example.rickmorticlassicview.presentation.adapter
 
-import android.annotation.SuppressLint
-import android.content.Context
+
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.rickmorticlassicview.databinding.RowCharacterItemBinding
 import com.example.rickmorticlassicview.model.Character
 
-class CharacterListAdapter : RecyclerView.Adapter<CharacterListAdapter.CharacterListViewHolder>() {
 
-    private var characterList: List<com.example.rickmorticlassicview.model.Character> = emptyList()
 
-    var onClickListener: (Character) -> Unit = {}
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CharacterListViewHolder {
+class CharacterListAdapter(
+    private val onClickListener: (Character) -> Unit
+) : PagingDataAdapter<Character, CharacterListAdapter.CharacterViewHolder>(CharacterDiffCallback()) {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CharacterViewHolder {
         val binding = RowCharacterItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return CharacterListViewHolder(binding)
+        return CharacterViewHolder(binding)
     }
 
-    override fun getItemCount(): Int {
-        return characterList.size
-    }
-
-    override fun onBindViewHolder(holder: CharacterListViewHolder, position: Int) {
-        val item = characterList[position]
-
-        holder.rootView.setOnClickListener {
-            onClickListener.invoke(item)
+    override fun onBindViewHolder(holder: CharacterViewHolder, position: Int) {
+        val character = getItem(position)
+        character?.let {
+            holder.bind(it, onClickListener)
         }
-
-        holder.nameTextView.text = item.name
-
-        Glide.with(holder.characterImageView)
-            .load(item.image)
-            .into(holder.characterImageView)
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun submitList(list: List<Character>) {
-        val diffResult = DiffUtil.calculateDiff(CharacterDiffCallback(characterList, list))
-        characterList = list
-        diffResult.dispatchUpdatesTo(this)
-        notifyDataSetChanged()
-    }
+    inner class CharacterViewHolder(private val binding: RowCharacterItemBinding) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(character: Character, onClickListener: (Character) -> Unit) {
+            binding.tvCharacterItemName.text = character.name
+            Glide.with(binding.ivCharacterItem.context)
+                .load(character.image)
+                .into(binding.ivCharacterItem)
 
-    inner class CharacterListViewHolder(binding: RowCharacterItemBinding) : RecyclerView.ViewHolder(binding.root) {
-        val rootView = binding.root
-        val nameTextView = binding.tvCharacterItemName
-        val characterImageView = binding.ivCharacterItem
+            // Configura el click listener
+            binding.root.setOnClickListener {
+                onClickListener(character)
+            }
+        }
     }
 }
 
-class CharacterDiffCallback(
-    private val oldList: List<Character>,
-    private val newList: List<Character>
-) : DiffUtil.Callback() {
-    override fun getOldListSize(): Int = oldList.size
-
-    override fun getNewListSize(): Int = newList.size
-
-    override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        return oldList[oldItemPosition].id == newList[newItemPosition].id
+class CharacterDiffCallback : DiffUtil.ItemCallback<Character>() {
+    override fun areItemsTheSame(oldItem: Character, newItem: Character): Boolean {
+        return oldItem.id == newItem.id
     }
 
-    override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean {
-        return oldList[oldItemPosition] == newList[newItemPosition]
+    override fun areContentsTheSame(oldItem: Character, newItem: Character): Boolean {
+        return oldItem == newItem
     }
 }

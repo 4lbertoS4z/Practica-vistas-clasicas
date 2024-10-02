@@ -81,7 +81,7 @@ class CharacterDetailFragment : Fragment() {
             .setMessage(error)
             .setPositiveButton(R.string.ok_action, null)
             .setNegativeButton(R.string.retry_action) { dialog, witch ->
-                characterViewModel.fetchCharacters(1)
+                characterViewModel.getPagedCharacters()
             }
             .show()
     }

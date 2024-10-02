@@ -5,118 +5,27 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
-import androidx.core.content.ContentProviderCompat
-import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.paging.LoadState
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.rickmorticlassicview.R
 import com.example.rickmorticlassicview.presentation.adapter.CharacterListAdapter
 import com.example.rickmorticlassicview.databinding.FragmentCharacterListBinding
-import com.example.rickmorticlassicview.model.ResourceState
 import com.example.rickmorticlassicview.presentation.viewmodel.CharactersViewModel
-import com.example.rickmorticlassicview.presentation.viewmodel.CharacterListState
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 
 class CharacterListFragment : Fragment() {
 
-    private val binding: FragmentCharacterListBinding by lazy {
-        FragmentCharacterListBinding.inflate(layoutInflater)
-    }
-
-    private val characterListAdapter = CharacterListAdapter()
-
+    private lateinit var binding: FragmentCharacterListBinding
     private val characterViewModel: CharactersViewModel by activityViewModel()
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        return binding.root
-    }
-
-    private var currentPage = 1
-    private var isLoading = false
-    private var isLastPage = false
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        initViewModel()
-        initUI()
-
-        // Carga inicial de personajes
-        characterViewModel.fetchCharacters(currentPage)
-
-        // Listener para el scroll
-        binding.rvCharacterList.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                super.onScrolled(recyclerView, dx, dy)
-                if (!isLoading && !isLastPage && !binding.rvCharacterList.canScrollVertically(1)) {
-                    isLoading = true
-                    currentPage++
-                    characterViewModel.fetchCharacters(currentPage)
-                }
-                binding.btnScrollToTop.visibility = if (recyclerView.canScrollVertically(-1)) {
-                    View.VISIBLE
-                } else {
-                    View.GONE
-                }
-            }
-        })
-        // Click del botón para desplazarse al inicio
-        binding.btnScrollToTop.setOnClickListener {
-            binding.rvCharacterList.smoothScrollToPosition(0)
-        }
-    }
-
-    private fun initViewModel() {
-
-        characterViewModel.getCharacterLiveData().observe(viewLifecycleOwner) { state ->
-            handleCharacterListState(state)
-        }
-    }
-
-    private fun handleCharacterListState(state: CharacterListState) {
-        when (state) {
-            is ResourceState.Loading -> {
-                binding.pbCharacterList.visibility = View.VISIBLE
-            }
-
-            is ResourceState.Success -> {
-                binding.pbCharacterList.visibility = View.GONE
-                if (state.result.isEmpty()) {
-                    isLastPage = true
-                    // Si la lista de resultados está vacía y es la última página, muestra un mensaje
-                    Snackbar.make(
-                        binding.rvCharacterList,
-                        "No hay más personajes para cargar.",
-                        Snackbar.LENGTH_SHORT
-                    ).show()
-                } else {
-                    characterListAdapter.submitList(state.result)
-                    isLastPage = false
-                }
-                isLoading = false // Resetea la bandera de carga
-            }
-
-            is ResourceState.Error -> {
-                binding.pbCharacterList.visibility = View.GONE
-                showErrorDialog(state.error)
-                isLoading = false // Resetea la bandera de carga
-            }
-        }
-    }
-
-    private fun initUI() {
-        binding.rvCharacterList.adapter = characterListAdapter
-        binding.rvCharacterList.layoutManager = LinearLayoutManager(requireContext())
-
-        characterListAdapter.onClickListener = { character ->
+    private val pagingAdapter: CharacterListAdapter by lazy {
+        CharacterListAdapter { character ->
+            val currentPage = (pagingAdapter.itemCount + 41) / 42
+            characterViewModel.setCurrentPage(currentPage)
             findNavController().navigate(
                 CharacterListFragmentDirections.actionCharacterListFragmentToCharacterDetailFragment(
                     character.id.toInt()
@@ -125,15 +34,44 @@ class CharacterListFragment : Fragment() {
         }
     }
 
-    private fun showErrorDialog(error: String) {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle(R.string.error_message)
-            .setMessage(error)
-            .setPositiveButton(R.string.ok_action, null)
-            .setNegativeButton(R.string.retry_action) { dialog, witch ->
-                characterViewModel.fetchCharacters(currentPage)
-            }
-            .show()
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        binding = FragmentCharacterListBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        initUI()
+        initViewModel()
+    }
+
+    private fun initUI() {
+        binding.rvCharacterList.adapter = pagingAdapter
+        binding.rvCharacterList.layoutManager = LinearLayoutManager(requireContext())
+
+        binding.btnScrollToTop.setOnClickListener {
+            binding.rvCharacterList.smoothScrollToPosition(0)
+        }
+
+        pagingAdapter.addLoadStateListener { loadState ->
+            binding.pbCharacterList.visibility = if (loadState.refresh is LoadState.Loading) View.VISIBLE else View.GONE
+
+            if (loadState.refresh is LoadState.Error) {
+                val error = (loadState.refresh as LoadState.Error).error
+                Snackbar.make(binding.rvCharacterList, error.localizedMessage.orEmpty(), Snackbar.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun initViewModel() {
+        lifecycleScope.launch {
+            characterViewModel.getPagedCharacters().collectLatest { pagingData ->
+                pagingAdapter.submitData(pagingData)
+            }
+        }
+    }
 }
